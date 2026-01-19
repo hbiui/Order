@@ -1,5 +1,10 @@
-/* index.css - 交互优化样式 */
-@import 'tailwindcss';
+/* index.css - 修复 Tailwind 导入问题 */
+/* 移除错误的 @import 'tailwindcss'; */
+
+/* Tailwind CSS 基础样式 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   /* 禁止文本选择 */
@@ -131,47 +136,9 @@
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 按钮按下效果 */
-.active\:scale-90:active {
-  transform: scale(0.9);
-}
-
-.active\:scale-95:active {
-  transform: scale(0.95);
-}
-
-.active\:scale-\[0\.98\]:active {
-  transform: scale(0.98);
-}
-
-.active\:scale-\[0\.97\]:active {
-  transform: scale(0.97);
-}
-
-/* 过渡效果 */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-/* 交互反馈 */
-.hover\:shadow-lg:hover {
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-
-.hover\:opacity-80:hover {
-  opacity: 0.8;
-}
-
 /* 修复移动端点击延迟 */
 * {
   touch-action: manipulation;
-}
-
-/* 修复图片加载 */
-img {
-  content-visibility: auto;
 }
 
 /* 修复按钮禁用状态 */
