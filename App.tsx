@@ -78,8 +78,10 @@ const HomeView: React.FC<{
   setDetailDish: (d: Dish) => void;
   cartCount: number;
   setIsCartOpen: (open: boolean) => void;
-}> = ({ dishes, currentUser, searchQuery, setSearchQuery, setDetailDish, cartCount, setIsCartOpen }) => {
+  addToCart: (dish: Dish, taste?: string) => void;
+}> = ({ dishes, currentUser, searchQuery, setSearchQuery, setDetailDish, cartCount, setIsCartOpen, addToCart }) => {
   const categories = Array.from(new Set(dishes.map(d => d.category)));
+  const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
   
   const filteredDishes = useMemo(() => {
     if (!searchQuery.trim()) return dishes;
@@ -95,19 +97,30 @@ const HomeView: React.FC<{
     );
   }, [categories, filteredDishes]);
 
-  // 修复搜索框输入问题
+  // 处理搜索框输入
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
     setSearchQuery(e.target.value);
   };
 
-  const handleClearSearch = (e: React.MouseEvent) => {
+  // 处理加号按钮点击
+  const handleAddToCart = (e: React.MouseEvent, dish: Dish) => {
     e.stopPropagation();
-    setSearchQuery('');
+    e.preventDefault();
+    
+    // 设置最近添加的菜品用于动画效果
+    setRecentlyAdded(dish.id);
+    
+    // 添加菜品到购物车
+    addToCart(dish);
+    
+    // 1秒后清除最近添加的状态
+    setTimeout(() => {
+      setRecentlyAdded(null);
+    }, 1000);
   };
 
   return (
-    <div className="pb-32 animate-in fade-in duration-500">
+    <div className="pb-32 animate-in fade-in duration-500" onClick={(e) => e.stopPropagation()}>
       <header className="px-5 pt-8 pb-4 bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -124,7 +137,7 @@ const HomeView: React.FC<{
           </div>
         </div>
         
-        <div className="relative group" onClick={(e) => e.stopPropagation()}>
+        <div className="relative group">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-500 transition-colors">
             <Search size={18} />
           </div>
@@ -133,12 +146,11 @@ const HomeView: React.FC<{
             placeholder="想吃点什么？"
             value={searchQuery}
             onChange={handleSearchChange}
-            onClick={(e) => e.stopPropagation()}
             className="w-full bg-slate-50 border border-slate-100 py-3.5 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-orange-500/5 focus:bg-white focus:border-orange-200 transition-all placeholder:text-slate-300 text-slate-700"
           />
           {searchQuery && (
             <button 
-              onClick={handleClearSearch}
+              onClick={() => setSearchQuery('')}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
             >
               <X size={16} />
@@ -193,10 +205,15 @@ const HomeView: React.FC<{
                            )}
                          </div>
                          <button 
-                           onClick={(e) => { e.stopPropagation(); setDetailDish(dish); }}
-                           className="bg-slate-900 text-white p-2.5 rounded-2xl active:bg-orange-500 transition-all hover:shadow-lg active:scale-90"
+                           onClick={(e) => handleAddToCart(e, dish)}
+                           className={`bg-slate-900 text-white p-2.5 rounded-2xl transition-all hover:shadow-lg active:scale-90 relative ${recentlyAdded === dish.id ? 'bg-orange-500 scale-110' : ''}`}
                          >
                            <Plus size={18} />
+                           {recentlyAdded === dish.id && (
+                             <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-ping">
+                               <Check size={12} />
+                             </div>
+                           )}
                          </button>
                       </div>
                     </div>
@@ -211,10 +228,10 @@ const HomeView: React.FC<{
       {cartCount > 0 && (
         <button 
           onClick={() => setIsCartOpen(true)}
-          className="fixed right-6 bottom-28 w-16 h-16 bg-slate-900 text-white rounded-[24px] shadow-2xl flex items-center justify-center z-30 animate-in zoom-in duration-300 active:scale-90 transition-transform"
+          className="fixed right-6 bottom-28 w-16 h-16 bg-slate-900 text-white rounded-[24px] shadow-2xl flex items-center justify-center z-30 animate-in zoom-in duration-300 active:scale-90 transition-transform hover:scale-105"
         >
           <ShoppingCart size={24} />
-          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full border-4 border-slate-50 shadow-lg">
+          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full border-4 border-slate-50 shadow-lg animate-pulse">
             {cartCount}
           </span>
         </button>
@@ -1198,6 +1215,7 @@ const App: React.FC = () => {
           setDetailDish={setDetailDish}
           cartCount={cartStats.count}
           setIsCartOpen={setIsCartOpen}
+          addToCart={addToCart}
         />
       )}
       
