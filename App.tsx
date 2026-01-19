@@ -68,6 +68,100 @@ const StarRating: React.FC<{ rating: number; size?: number }> = ({ rating, size 
   );
 };
 
+// --- 新增：加号按钮弹窗组件 ---
+const AddToCartModal: React.FC<{
+  dish: Dish;
+  onClose: () => void;
+  onConfirm: (selectedTaste?: string, note?: string) => void;
+}> = ({ dish, onClose, onConfirm }) => {
+  const [selectedTaste, setSelectedTaste] = useState<string>(
+    dish.tasteOptions && dish.tasteOptions.length > 0 ? dish.tasteOptions[0] : ''
+  );
+  const [note, setNote] = useState('');
+
+  const handleConfirm = () => {
+    onConfirm(selectedTaste || undefined, note.trim() || undefined);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-[90] flex items-end backdrop-blur-sm" onClick={onClose}>
+      <div 
+        className="bg-white w-full rounded-t-[56px] p-8 pb-16 animate-in slide-in-from-bottom duration-500 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-2xl font-black text-slate-900">添加到购物车</h3>
+            <p className="text-slate-400 text-sm font-bold mt-1">{dish.name}</p>
+          </div>
+          <button onClick={onClose} className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-slate-400 active:scale-90">
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* 口味选择 */}
+          {dish.tasteOptions && dish.tasteOptions.length > 0 && (
+            <div>
+              <h4 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
+                <MessageSquare size={20} className="text-orange-500" /> 口味选择
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                {dish.tasteOptions.map((taste, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedTaste(taste)}
+                    className={`py-4 rounded-2xl text-sm font-black transition-all border-2 ${
+                      selectedTaste === taste
+                        ? 'bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20'
+                        : 'bg-white text-slate-400 border-slate-100 hover:border-orange-200'
+                    }`}
+                  >
+                    {taste}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 订单备注 */}
+          <div>
+            <h4 className="text-lg font-black text-slate-800 mb-4">订单备注</h4>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="请输入特殊要求（如：少盐、不要葱等）"
+              className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-2 focus:ring-orange-500/10 resize-none h-32 text-sm font-bold"
+            />
+          </div>
+
+          {/* 价格信息 */}
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">点餐成本</p>
+                <div className="flex items-baseline gap-2 mt-1">
+                  {dish.supportsBalance && <span className="text-2xl font-black text-orange-600">¥{dish.price}</span>}
+                  {dish.supportsHousework && (
+                    <span className="text-[10px] font-black text-blue-500 uppercase">/ {dish.chorePrice} 次劳动</span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={handleConfirm}
+                className="bg-slate-900 text-white py-4 px-8 rounded-2xl font-black text-lg active:scale-95 transition-all shadow-xl shadow-slate-900/20"
+              >
+                确认添加
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- Sub-components moved outside of App to maintain persistent identity ---
 
 const HomeView: React.FC<{
@@ -78,10 +172,12 @@ const HomeView: React.FC<{
   setDetailDish: (d: Dish) => void;
   cartCount: number;
   setIsCartOpen: (open: boolean) => void;
-  addToCart: (dish: Dish, taste?: string) => void;
+  addToCart: (dish: Dish, taste?: string, note?: string) => void;
 }> = ({ dishes, currentUser, searchQuery, setSearchQuery, setDetailDish, cartCount, setIsCartOpen, addToCart }) => {
   const categories = Array.from(new Set(dishes.map(d => d.category)));
   const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
+  const [showAddToCartModal, setShowAddToCartModal] = useState(false);
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   
   const filteredDishes = useMemo(() => {
     if (!searchQuery.trim()) return dishes;
@@ -102,153 +198,173 @@ const HomeView: React.FC<{
     setSearchQuery(e.target.value);
   };
 
-  // 处理加号按钮点击
-  const handleAddToCart = (e: React.MouseEvent, dish: Dish) => {
+  // 处理加号按钮点击 - 显示弹窗
+  const handleAddToCartClick = (e: React.MouseEvent, dish: Dish) => {
     e.stopPropagation();
     e.preventDefault();
     
+    setSelectedDish(dish);
+    setShowAddToCartModal(true);
+  };
+
+  // 处理弹窗确认
+  const handleAddToCartConfirm = (dish: Dish, taste?: string, note?: string) => {
     // 设置最近添加的菜品用于动画效果
     setRecentlyAdded(dish.id);
     
     // 添加菜品到购物车
-    addToCart(dish);
+    addToCart(dish, taste, note);
     
     // 1秒后清除最近添加的状态
     setTimeout(() => {
       setRecentlyAdded(null);
     }, 1000);
+    
+    setShowAddToCartModal(false);
   };
 
   return (
-    <div className="pb-32 animate-in fade-in duration-500" onClick={(e) => e.stopPropagation()}>
-      <header className="px-5 pt-8 pb-4 bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-black text-orange-600 tracking-tighter flex items-center gap-1">
-              <Utensils size={28} /> 家味点餐
-            </h1>
-            <p className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">挑选属于你的家常味</p>
-          </div>
-          <div className="flex gap-2">
-            <div className="bg-slate-50 p-2.5 rounded-2xl flex items-center gap-2 border border-slate-100">
-              <div className="bg-orange-500 text-white p-1 rounded-lg"><Wallet size={14}/></div>
-              <span className="text-xs font-bold text-slate-700 tracking-tighter">¥{currentUser?.balance?.toFixed(1) || '0.0'}</span>
+    <>
+      <div className="pb-32 animate-in fade-in duration-500" onClick={(e) => e.stopPropagation()}>
+        <header className="px-5 pt-8 pb-4 bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-2xl font-black text-orange-600 tracking-tighter flex items-center gap-1">
+                <Utensils size={28} /> 家味点餐
+              </h1>
+              <p className="text-slate-400 text-[10px] font-bold tracking-widest uppercase">挑选属于你的家常味</p>
+            </div>
+            <div className="flex gap-2">
+              <div className="bg-slate-50 p-2.5 rounded-2xl flex items-center gap-2 border border-slate-100">
+                <div className="bg-orange-500 text-white p-1 rounded-lg"><Wallet size={14}/></div>
+                <span className="text-xs font-bold text-slate-700 tracking-tighter">¥{currentUser?.balance?.toFixed(1) || '0.0'}</span>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="relative group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-500 transition-colors">
-            <Search size={18} />
+          
+          <div className="relative group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-500 transition-colors">
+              <Search size={18} />
+            </div>
+            <input 
+              type="text"
+              placeholder="想吃点什么？"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full bg-slate-50 border border-slate-100 py-3.5 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-orange-500/5 focus:bg-white focus:border-orange-200 transition-all placeholder:text-slate-300 text-slate-700"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
-          <input 
-            type="text"
-            placeholder="想吃点什么？"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="w-full bg-slate-50 border border-slate-100 py-3.5 pl-11 pr-4 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-orange-500/5 focus:bg-white focus:border-orange-200 transition-all placeholder:text-slate-300 text-slate-700"
-          />
-          {searchQuery && (
-            <button 
-              onClick={() => setSearchQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
-            >
-              <X size={16} />
-            </button>
+        </header>
+
+        <div className="px-5 py-4 space-y-8">
+          {filteredDishes.length === 0 ? (
+            <div className="py-20 text-center flex flex-col items-center">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                <Search size={40} />
+              </div>
+              <p className="text-slate-400 font-bold text-sm">找不到相关的菜品哦</p>
+              <button onClick={() => setSearchQuery('')} className="mt-4 text-orange-500 text-xs font-black uppercase tracking-widest">清空搜索条件</button>
+            </div>
+          ) : (
+            activeCategories.map(cat => (
+              <section key={cat}>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-black text-slate-800 tracking-tight">{cat}</h2>
+                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{filteredDishes.filter(d => d.category === cat).length} 道菜品</span>
+                </div>
+                <div className="grid grid-cols-1 gap-5">
+                  {filteredDishes.filter(d => d.category === cat).map(dish => (
+                    <div 
+                      key={dish.id} 
+                      className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 flex active:scale-[0.98] transition-all duration-300 group"
+                      onClick={() => setDetailDish(dish)}
+                    >
+                      <div className="relative">
+                        <img src={dish.imageUrl} className="w-32 h-32 object-cover" loading="lazy" alt={dish.name} />
+                        {dish.difficulty > 3 && (
+                          <div className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-lg">
+                            <Flame size={12} fill="currentColor" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4 flex flex-col justify-between flex-1">
+                        <div>
+                          <h3 className="font-bold text-lg text-slate-800 group-hover:text-orange-500 transition-colors">{dish.name}</h3>
+                          <p className="text-slate-400 text-[11px] leading-tight line-clamp-2 mt-1">{dish.description}</p>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <div className="flex flex-col">
+                            {dish.supportsBalance && <span className="text-orange-600 font-black text-sm">¥{dish.price}</span>}
+                            {dish.supportsHousework && (
+                              <span className="text-blue-500 text-[9px] font-bold flex items-center gap-1 uppercase tracking-tighter">
+                                <WashingMachine size={10}/> {dish.chorePrice} 次家务
+                              </span>
+                            )}
+                          </div>
+                          <button 
+                            onClick={(e) => handleAddToCartClick(e, dish)}
+                            className={`bg-slate-900 text-white p-2.5 rounded-2xl transition-all hover:shadow-lg active:scale-90 relative ${recentlyAdded === dish.id ? 'bg-orange-500 scale-110' : ''}`}
+                          >
+                            <Plus size={18} />
+                            {recentlyAdded === dish.id && (
+                              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-ping">
+                                <Check size={12} />
+                              </div>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))
           )}
         </div>
-      </header>
 
-      <div className="px-5 py-4 space-y-8">
-        {filteredDishes.length === 0 ? (
-          <div className="py-20 text-center flex flex-col items-center">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4">
-              <Search size={40} />
-            </div>
-            <p className="text-slate-400 font-bold text-sm">找不到相关的菜品哦</p>
-            <button onClick={() => setSearchQuery('')} className="mt-4 text-orange-500 text-xs font-black uppercase tracking-widest">清空搜索条件</button>
-          </div>
-        ) : (
-          activeCategories.map(cat => (
-            <section key={cat}>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-black text-slate-800 tracking-tight">{cat}</h2>
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{filteredDishes.filter(d => d.category === cat).length} 道菜品</span>
-              </div>
-              <div className="grid grid-cols-1 gap-5">
-                {filteredDishes.filter(d => d.category === cat).map(dish => (
-                  <div 
-                    key={dish.id} 
-                    className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 flex active:scale-[0.98] transition-all duration-300 group"
-                    onClick={() => setDetailDish(dish)}
-                  >
-                    <div className="relative">
-                      <img src={dish.imageUrl} className="w-32 h-32 object-cover" loading="lazy" alt={dish.name} />
-                      {dish.difficulty > 3 && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white p-1 rounded-lg">
-                          <Flame size={12} fill="currentColor" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4 flex flex-col justify-between flex-1">
-                      <div>
-                        <h3 className="font-bold text-lg text-slate-800 group-hover:text-orange-500 transition-colors">{dish.name}</h3>
-                        <p className="text-slate-400 text-[11px] leading-tight line-clamp-2 mt-1">{dish.description}</p>
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                         <div className="flex flex-col">
-                           {dish.supportsBalance && <span className="text-orange-600 font-black text-sm">¥{dish.price}</span>}
-                           {dish.supportsHousework && (
-                             <span className="text-blue-500 text-[9px] font-bold flex items-center gap-1 uppercase tracking-tighter">
-                               <WashingMachine size={10}/> {dish.chorePrice} 次家务
-                             </span>
-                           )}
-                         </div>
-                         <button 
-                           onClick={(e) => handleAddToCart(e, dish)}
-                           className={`bg-slate-900 text-white p-2.5 rounded-2xl transition-all hover:shadow-lg active:scale-90 relative ${recentlyAdded === dish.id ? 'bg-orange-500 scale-110' : ''}`}
-                         >
-                           <Plus size={18} />
-                           {recentlyAdded === dish.id && (
-                             <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-ping">
-                               <Check size={12} />
-                             </div>
-                           )}
-                         </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))
+        {cartCount > 0 && (
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="fixed right-6 bottom-28 w-16 h-16 bg-slate-900 text-white rounded-[24px] shadow-2xl flex items-center justify-center z-30 animate-in zoom-in duration-300 active:scale-90 transition-transform hover:scale-105"
+          >
+            <ShoppingCart size={24} />
+            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full border-4 border-slate-50 shadow-lg animate-pulse">
+              {cartCount}
+            </span>
+          </button>
         )}
       </div>
 
-      {cartCount > 0 && (
-        <button 
-          onClick={() => setIsCartOpen(true)}
-          className="fixed right-6 bottom-28 w-16 h-16 bg-slate-900 text-white rounded-[24px] shadow-2xl flex items-center justify-center z-30 animate-in zoom-in duration-300 active:scale-90 transition-transform hover:scale-105"
-        >
-          <ShoppingCart size={24} />
-          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full border-4 border-slate-50 shadow-lg animate-pulse">
-            {cartCount}
-          </span>
-        </button>
+      {/* 添加购物车弹窗 */}
+      {showAddToCartModal && selectedDish && (
+        <AddToCartModal
+          dish={selectedDish}
+          onClose={() => setShowAddToCartModal(false)}
+          onConfirm={(taste, note) => handleAddToCartConfirm(selectedDish, taste, note)}
+        />
       )}
-    </div>
+    </>
   );
 };
 
 const DishDetailView: React.FC<{
   dish: Dish;
   onClose: () => void;
-  addToCart: (dish: Dish, taste?: string) => void;
+  addToCart: (dish: Dish, taste?: string, note?: string) => void;
 }> = ({ dish, onClose, addToCart }) => {
   const [selectedTaste, setSelectedTaste] = useState<string>(dish.tasteOptions && dish.tasteOptions.length > 0 ? dish.tasteOptions[0] : '');
+  const [note, setNote] = useState('');
 
   return (
-    <div className="fixed inset-0 bg-white z-[60] overflow-y-auto animate-in slide-in-from-right duration-400">
+    <div className="fixed inset-0 bg-white z-[60] overflow-y-auto">
       <div className="relative h-80">
         <img src={dish.imageUrl} className="w-full h-full object-cover" alt={dish.name} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
@@ -268,7 +384,7 @@ const DishDetailView: React.FC<{
         </div>
       </div>
 
-      <div className="p-8 pb-32 space-y-12">
+      <div className="p-8 pb-48 space-y-12"> {/* 增加底部空间，防止内容被固定底部栏遮挡 */}
         {dish.tasteOptions && dish.tasteOptions.length > 0 && (
           <section>
             <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2 mb-5">
@@ -309,22 +425,34 @@ const DishDetailView: React.FC<{
           </div>
         </section>
 
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-white/90 backdrop-blur-xl border-t border-slate-100 z-50">
-          <div className="flex items-center justify-between gap-6">
-             <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">点餐成本</p>
-                <div className="flex items-baseline gap-2">
-                  {dish.supportsBalance && <span className="text-2xl font-black text-orange-600">¥{dish.price}</span>}
-                  {dish.supportsHousework && <span className="text-[10px] font-black text-blue-500 uppercase">/ {dish.chorePrice} 次劳动</span>}
-                </div>
-             </div>
-             <button 
-               onClick={() => { addToCart(dish, selectedTaste); onClose(); }}
-               className="flex-1 bg-slate-900 text-white py-5 rounded-[24px] font-black text-lg active:scale-95 transition-all shadow-xl shadow-slate-900/20"
-             >
-               放入我的托盘
-             </button>
+        {/* 备注输入框 */}
+        <section>
+          <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2 mb-5">订单备注</h3>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="请输入特殊要求（如：少盐、不要葱等）"
+            className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-2 focus:ring-orange-500/10 resize-none h-32 text-sm font-bold"
+          />
+        </section>
+      </div>
+
+      {/* 固定在底部的操作栏 */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-6 bg-white/95 backdrop-blur-xl border-t border-slate-100 z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">点餐成本</p>
+            <div className="flex items-baseline gap-2">
+              {dish.supportsBalance && <span className="text-2xl font-black text-orange-600">¥{dish.price}</span>}
+              {dish.supportsHousework && <span className="text-[10px] font-black text-blue-500 uppercase">/ {dish.chorePrice} 次劳动</span>}
+            </div>
           </div>
+          <button 
+            onClick={() => { addToCart(dish, selectedTaste, note.trim() || undefined); onClose(); }}
+            className="flex-1 bg-slate-900 text-white py-5 rounded-[24px] font-black text-lg active:scale-95 transition-all shadow-xl shadow-slate-900/20"
+          >
+            放入我的托盘
+          </button>
         </div>
       </div>
     </div>
@@ -336,8 +464,8 @@ const CartModal: React.FC<{
   cartStats: { totalPrice: number; totalChore: number; count: number };
   currentUser: User | null;
   setIsCartOpen: (open: boolean) => void;
-  updateCartQuantity: (dishId: string, taste: string | undefined, delta: number) => void;
-  updateItemPaymentMethod: (dishId: string, taste: string | undefined, method: PaymentMethod) => void;
+  updateCartQuantity: (dishId: string, taste: string | undefined, note: string | undefined, delta: number) => void;
+  updateItemPaymentMethod: (dishId: string, taste: string | undefined, note: string | undefined, method: PaymentMethod) => void;
   handleCheckout: () => void;
 }> = ({ cart, cartStats, currentUser, setIsCartOpen, updateCartQuantity, updateItemPaymentMethod, handleCheckout }) => (
   <div className="fixed inset-0 bg-black/70 z-[70] flex items-end animate-in fade-in duration-300 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}>
@@ -364,10 +492,13 @@ const CartModal: React.FC<{
                          {item.selectedTaste}
                        </span>
                      )}
+                     {item.note && (
+                       <p className="text-[10px] text-slate-500 font-bold mt-1">备注: {item.note}</p>
+                     )}
                      <div className="flex items-center bg-white rounded-xl border border-slate-100 p-1 w-fit mt-2 shadow-sm">
-                        <button onClick={() => updateCartQuantity(item.dish.id, item.selectedTaste, -1)} className="p-1.5 text-slate-400 hover:text-red-500 active:scale-75 transition-colors"><Minus size={14}/></button>
+                        <button onClick={() => updateCartQuantity(item.dish.id, item.selectedTaste, item.note, -1)} className="p-1.5 text-slate-400 hover:text-red-500 active:scale-75 transition-colors"><Minus size={14}/></button>
                         <span className="w-8 text-center text-xs font-black text-slate-800">{item.quantity}</span>
-                        <button onClick={() => updateCartQuantity(item.dish.id, item.selectedTaste, 1)} className="p-1.5 text-orange-500 hover:text-orange-600 active:scale-75 transition-colors"><Plus size={14}/></button>
+                        <button onClick={() => updateCartQuantity(item.dish.id, item.selectedTaste, item.note, 1)} className="p-1.5 text-orange-500 hover:text-orange-600 active:scale-75 transition-colors"><Plus size={14}/></button>
                      </div>
                   </div>
                </div>
@@ -377,7 +508,7 @@ const CartModal: React.FC<{
                   <div className="flex gap-2">
                     {item.dish.supportsBalance && (
                       <button 
-                        onClick={() => updateItemPaymentMethod(item.dish.id, item.selectedTaste, PaymentMethod.BALANCE)}
+                        onClick={() => updateItemPaymentMethod(item.dish.id, item.selectedTaste, item.note, PaymentMethod.BALANCE)}
                         className={`flex-1 py-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${item.selectedPaymentMethod === PaymentMethod.BALANCE ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20' : 'bg-white text-slate-400 border-slate-100'}`}
                       >
                          <Wallet size={14} className={item.selectedPaymentMethod === PaymentMethod.BALANCE ? 'text-white' : 'text-slate-300'} />
@@ -386,7 +517,7 @@ const CartModal: React.FC<{
                     )}
                     {item.dish.supportsHousework && (
                       <button 
-                        onClick={() => updateItemPaymentMethod(item.dish.id, item.selectedTaste, PaymentMethod.HOUSEWORK)}
+                        onClick={() => updateItemPaymentMethod(item.dish.id, item.selectedTaste, item.note, PaymentMethod.HOUSEWORK)}
                         className={`flex-1 py-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all ${item.selectedPaymentMethod === PaymentMethod.HOUSEWORK ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20' : 'bg-white text-slate-400 border-slate-100'}`}
                       >
                          <WashingMachine size={14} className={item.selectedPaymentMethod === PaymentMethod.HOUSEWORK ? 'text-white' : 'text-slate-300'} />
@@ -1125,20 +1256,34 @@ const App: React.FC = () => {
     }
   };
 
-  const addToCart = (dish: Dish, taste?: string) => {
+  const addToCart = (dish: Dish, taste?: string, note?: string) => {
     setCart(prev => {
-      const existing = prev.find(item => item.dish.id === dish.id && item.selectedTaste === taste);
+      const existing = prev.find(item => 
+        item.dish.id === dish.id && 
+        item.selectedTaste === taste && 
+        item.note === note
+      );
       if (existing) {
-        return prev.map(item => (item.dish.id === dish.id && item.selectedTaste === taste) ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map(item => 
+          (item.dish.id === dish.id && item.selectedTaste === taste && item.note === note) 
+            ? { ...item, quantity: item.quantity + 1 } 
+            : item
+        );
       }
       const defaultMethod = dish.supportsBalance ? PaymentMethod.BALANCE : PaymentMethod.HOUSEWORK;
-      return [...prev, { dish, quantity: 1, selectedPaymentMethod: defaultMethod, selectedTaste: taste }];
+      return [...prev, { 
+        dish, 
+        quantity: 1, 
+        selectedPaymentMethod: defaultMethod, 
+        selectedTaste: taste,
+        note: note
+      }];
     });
   };
 
-  const updateCartQuantity = (dishId: string, taste: string | undefined, delta: number) => {
+  const updateCartQuantity = (dishId: string, taste: string | undefined, note: string | undefined, delta: number) => {
     setCart(prev => prev.map(item => {
-      if (item.dish.id === dishId && item.selectedTaste === taste) {
+      if (item.dish.id === dishId && item.selectedTaste === taste && item.note === note) {
         const newQty = Math.max(0, item.quantity + delta);
         return { ...item, quantity: newQty };
       }
@@ -1146,9 +1291,11 @@ const App: React.FC = () => {
     }).filter(item => item.quantity > 0));
   };
 
-  const updateItemPaymentMethod = (dishId: string, taste: string | undefined, method: PaymentMethod) => {
+  const updateItemPaymentMethod = (dishId: string, taste: string | undefined, note: string | undefined, method: PaymentMethod) => {
     setCart(prev => prev.map(item => 
-      (item.dish.id === dishId && item.selectedTaste === taste) ? { ...item, selectedPaymentMethod: method } : item
+      (item.dish.id === dishId && item.selectedTaste === taste && item.note === note) 
+        ? { ...item, selectedPaymentMethod: method } 
+        : item
     ));
   };
 
