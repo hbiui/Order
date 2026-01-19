@@ -907,6 +907,202 @@ const AdminView: React.FC<{
            </div>
         </div>
       )}
+
+      {/* 成员编辑弹窗 */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-8 backdrop-blur-sm" onClick={() => setEditingUser(null)}>
+           <form onSubmit={saveUser} className="bg-white w-full max-w-sm rounded-[48px] p-8 space-y-4 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-2">
+                 <h3 className="text-2xl font-black tracking-tight">{editingUser.id ? '编辑成员' : '新增成员'}</h3>
+                 <button type="button" onClick={() => setEditingUser(null)} className="text-slate-300 hover:text-slate-500"><X size={24}/></button>
+              </div>
+
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative group">
+                  <img src={editingUser.avatar} className="w-24 h-24 rounded-[32px] object-cover border-4 border-slate-50 shadow-md" alt="用户头像" />
+                  <button type="button" onClick={() => setEditingUser({...editingUser, avatar: `https://picsum.photos/seed/${Math.random()}/200`})} className="absolute -bottom-2 -right-2 bg-white p-2 rounded-xl shadow-lg border border-slate-100 text-orange-500 active:scale-90 transition-transform">
+                    <RefreshCcw size={16} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">权限级别</label>
+                  <div className="flex p-1 bg-slate-100 rounded-2xl">
+                    <button 
+                      type="button"
+                      onClick={() => setEditingUser({...editingUser, role: UserRole.MEMBER})}
+                      className={`flex-1 py-3 rounded-xl font-black text-[11px] flex items-center justify-center gap-2 transition-all ${editingUser.role === UserRole.MEMBER ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      <UserIcon size={14} /> 家庭成员
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setEditingUser({...editingUser, role: UserRole.ADMIN})}
+                      className={`flex-1 py-3 rounded-xl font-black text-[11px] flex items-center justify-center gap-2 transition-all ${editingUser.role === UserRole.ADMIN ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-400'}`}
+                    >
+                      <ShieldCheck size={14} /> 管理员
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">称呼</label>
+                   <input value={editingUser.name} onChange={e => setEditingUser({...editingUser, name: e.target.value})} required placeholder="例如：奶奶" className="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold border border-slate-100 text-sm focus:ring-2 ring-orange-100" />
+                </div>
+                
+                <div className="space-y-1">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">通行密码</label>
+                   <input value={editingUser.password || ''} onChange={e => setEditingUser({...editingUser, password: e.target.value})} required placeholder="用于登录" className="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold border border-slate-100 text-sm focus:ring-2 ring-orange-100" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">初始余额</label>
+                      <input type="number" value={editingUser.balance} onChange={e => setEditingUser({...editingUser, balance: Number(e.target.value)})} required className="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold border border-slate-100 text-sm focus:ring-2 ring-orange-100" />
+                   </div>
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">家务点</label>
+                      <input type="number" value={editingUser.houseworkCredits} onChange={e => setEditingUser({...editingUser, houseworkCredits: Number(e.target.value)})} required className="w-full p-4 bg-slate-50 rounded-2xl outline-none font-bold border border-slate-100 text-sm focus:ring-2 ring-orange-100" />
+                   </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-6">
+                 <button type="button" onClick={() => setEditingUser(null)} className="flex-1 py-4 font-black text-slate-400 active:opacity-60 text-sm">取消</button>
+                 <button type="submit" className="flex-2 bg-slate-900 text-white py-4 px-10 rounded-2xl font-black shadow-xl shadow-slate-900/10 active:scale-95 transition-all text-sm uppercase tracking-widest">保存成员信息</button>
+              </div>
+           </form>
+        </div>
+      )}
+
+      {/* 菜品库编辑弹窗 */}
+      {editingDish && (
+        <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setEditingDish(null)}>
+           <form onSubmit={saveDish} className="bg-white w-full max-w-sm rounded-[40px] p-6 space-y-4 shadow-2xl animate-in zoom-in-95 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-2">
+                 <h3 className="text-xl font-black">{editingDish.id ? '编辑菜品' : '新增菜品'}</h3>
+                 <button type="button" onClick={() => setEditingDish(null)} className="text-slate-300 hover:text-slate-500"><X size={20}/></button>
+              </div>
+              
+              <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                 <div className="w-full h-40 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center group-hover:border-orange-300 transition-colors">
+                    {editingDish.imageUrl ? (
+                      <img src={editingDish.imageUrl} className="w-full h-full object-cover" alt="菜品预览" />
+                    ) : (
+                      <div className="flex flex-col items-center text-slate-300">
+                         <Upload size={32} />
+                         <span className="text-[10px] font-black uppercase mt-2">点击上传图片</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-black text-xs">
+                       点击更换图片
+                    </div>
+                 </div>
+                 <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                 />
+              </div>
+
+              <div className="space-y-4">
+                 <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">菜名</label>
+                    <input value={editingDish.name} onChange={e => setEditingDish({...editingDish, name: e.target.value})} required className="w-full p-3 bg-slate-50 rounded-xl font-bold border border-slate-100 text-sm outline-none focus:ring-2 ring-orange-100" />
+                 </div>
+
+                 <div className="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1 flex items-center gap-1.5">
+                      <Tag size={10} /> 口味标签管理
+                    </label>
+                    
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {(editingDish.tasteOptions || []).map((tag, i) => (
+                        <div key={i} className="flex items-center gap-1 bg-orange-100 text-orange-600 px-3 py-1.5 rounded-lg text-[10px] font-black animate-in zoom-in duration-200">
+                          {tag}
+                          <button type="button" onClick={() => removeTasteTag(tag)} className="hover:text-orange-800 transition-colors">
+                            <X size={12} strokeWidth={3} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input 
+                        value={newTaste} 
+                        onChange={e => setNewTaste(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTasteTag(); } }}
+                        placeholder="例如: 少油少盐"
+                        className="flex-1 p-2 bg-white rounded-lg font-bold border border-slate-200 text-xs outline-none focus:ring-2 ring-orange-100"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={addTasteTag}
+                        className="bg-slate-900 text-white p-2 rounded-lg active:scale-90 transition-transform"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">余额价格</label>
+                      <input type="number" value={editingDish.price} onChange={e => setEditingDish({...editingDish, price: Number(e.target.value)})} required className="w-full p-3 bg-slate-50 rounded-xl font-bold border border-slate-100 text-sm outline-none focus:ring-2 ring-orange-100" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">家务点数</label>
+                      <input type="number" value={editingDish.chorePrice} onChange={e => setEditingDish({...editingDish, chorePrice: Number(e.target.value)})} required className="w-full p-3 bg-slate-50 rounded-xl font-bold border border-slate-100 text-sm outline-none focus:ring-2 ring-orange-100" />
+                    </div>
+                 </div>
+                 
+                 <div className="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">难度系数 ({editingDish.difficulty.toFixed(1)}级)</label>
+                      <StarRating rating={editingDish.difficulty} size={12} />
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0.5" 
+                      max="5" 
+                      step="0.5" 
+                      value={editingDish.difficulty} 
+                      onChange={e => setEditingDish({...editingDish, difficulty: parseFloat(e.target.value)})}
+                      className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                    />
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">所属分类</label>
+                      <input value={editingDish.category} onChange={e => setEditingDish({...editingDish, category: e.target.value})} required className="w-full p-3 bg-slate-50 rounded-xl font-bold border border-slate-100 text-sm outline-none focus:ring-2 ring-orange-100" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">烹饪时间</label>
+                      <input value={editingDish.cookingTime} onChange={e => setEditingDish({...editingDish, cookingTime: e.target.value})} placeholder="例如: 15分钟" required className="w-full p-3 bg-slate-50 rounded-xl font-bold border border-slate-100 text-sm outline-none focus:ring-2 ring-orange-100" />
+                    </div>
+                 </div>
+
+                 <div className="space-y-1">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">简介</label>
+                    <textarea value={editingDish.description} onChange={e => setEditingDish({...editingDish, description: e.target.value})} required className="w-full p-3 bg-slate-50 rounded-xl font-bold border border-slate-100 text-sm h-16 resize-none outline-none focus:ring-2 ring-orange-100" />
+                 </div>
+                 <div className="flex gap-4 p-2 bg-slate-50 rounded-xl">
+                    <label className="flex items-center gap-2 cursor-pointer flex-1"><input type="checkbox" checked={editingDish.supportsBalance} onChange={e => setEditingDish({...editingDish, supportsBalance: e.target.checked})} className="accent-orange-500" /> <span className="text-[10px] font-black text-slate-600">余额支付</span></label>
+                    <label className="flex items-center gap-2 cursor-pointer flex-1"><input type="checkbox" checked={editingDish.supportsHousework} onChange={e => setEditingDish({...editingDish, supportsHousework: e.target.checked})} className="accent-blue-500" /> <span className="text-[10px] font-black text-slate-600">家务支付</span></label>
+                 </div>
+              </div>
+              <div className="flex gap-4 pt-6">
+                 <button type="button" onClick={() => setEditingDish(null)} className="flex-1 py-4 font-black text-slate-400 text-sm active:opacity-60">取消</button>
+                 <button type="submit" className="flex-2 bg-slate-900 text-white py-4 px-6 rounded-2xl font-black text-sm active:scale-95 transition-transform shadow-lg shadow-slate-900/10">完成修改</button>
+              </div>
+           </form>
+        </div>
+      )}
     </div>
   );
 };
