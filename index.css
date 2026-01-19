@@ -1,5 +1,4 @@
 /* index.css - 修复 Tailwind 导入问题 */
-/* 移除错误的 @import 'tailwindcss'; */
 
 /* Tailwind CSS 基础样式 */
 @tailwind base;
@@ -84,6 +83,21 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* 新增：按钮点击动画 */
+  .btn-press {
+    @apply active:scale-95 transition-transform duration-100;
+  }
+
+  /* 新增：成功动画 */
+  .success-pop {
+    animation: successPop 0.3s ease-out;
+  }
+
+  /* 新增：购物车动画 */
+  .cart-bounce {
+    animation: cartBounce 0.5s ease;
+  }
 }
 
 @keyframes fadeIn {
@@ -126,6 +140,18 @@
   100% { width: 100%; }
 }
 
+/* 新增动画 */
+@keyframes successPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cartBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 /* 加载状态动画 */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -150,4 +176,22 @@ button:disabled {
 /* 修复滚动容器 */
 .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
+}
+
+/* 修复搜索框输入 */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 修复点击事件 */
+*:focus {
+  outline: none;
+}
+
+/* 修复移动端按钮样式 */
+button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
