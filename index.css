@@ -1,0 +1,186 @@
+/* index.css - 交互优化样式 */
+@import 'tailwindcss';
+
+@layer base {
+  /* 禁止文本选择 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* 允许输入框文本选择 */
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* 平滑滚动 */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  /* 动画类 */
+  .animate-in {
+    animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-fill-mode: both;
+  }
+
+  .fade-in {
+    animation-name: fadeIn;
+  }
+
+  .slide-in-from-right {
+    animation-name: slideInFromRight;
+  }
+
+  .slide-in-from-bottom {
+    animation-name: slideInFromBottom;
+  }
+
+  .zoom-in {
+    animation-name: zoomIn;
+  }
+
+  .zoom-in-95 {
+    animation-name: zoomIn95;
+  }
+
+  .zoom-in-50 {
+    animation-name: zoomIn50;
+  }
+
+  .slide-in-from-top {
+    animation-name: slideInFromTop;
+  }
+
+  /* 文本截断 */
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  /* 安全区域适配 */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  /* 滚动条隐藏 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes zoomIn95 {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes zoomIn50 {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+/* 加载状态动画 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 按钮按下效果 */
+.active\:scale-90:active {
+  transform: scale(0.9);
+}
+
+.active\:scale-95:active {
+  transform: scale(0.95);
+}
+
+.active\:scale-\[0\.98\]:active {
+  transform: scale(0.98);
+}
+
+.active\:scale-\[0\.97\]:active {
+  transform: scale(0.97);
+}
+
+/* 过渡效果 */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* 交互反馈 */
+.hover\:shadow-lg:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.hover\:opacity-80:hover {
+  opacity: 0.8;
+}
+
+/* 修复移动端点击延迟 */
+* {
+  touch-action: manipulation;
+}
+
+/* 修复图片加载 */
+img {
+  content-visibility: auto;
+}
+
+/* 修复按钮禁用状态 */
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* 修复滚动容器 */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
