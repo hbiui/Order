@@ -1,4 +1,3 @@
-
 export enum PaymentMethod {
   BALANCE = 'BALANCE',
   HOUSEWORK = 'HOUSEWORK'
@@ -40,14 +39,15 @@ export interface Dish {
   steps: string[]; 
   cookingTime: string; 
   difficulty: number; 
-  tasteOptions?: string[]; // 新增：可供选择的口味
+  tasteOptions?: string[]; // 可供选择的口味
 }
 
 export interface CartItem {
   dish: Dish;
   quantity: number;
   selectedPaymentMethod: PaymentMethod;
-  selectedTaste?: string; // 新增：用户选择的口味
+  selectedTaste?: string; // 用户选择的口味
+  note?: string; // 新增：订单备注
 }
 
 export interface Order {
@@ -62,5 +62,6 @@ export interface Order {
   totalCost: number;
   status: OrderStatus;
   timestamp: number;
-  selectedTaste?: string; // 新增：订单中体现的口味
+  selectedTaste?: string; // 订单中体现的口味
+  note?: string; // 新增：订单备注
 }
