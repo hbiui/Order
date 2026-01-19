@@ -70,9 +70,9 @@
     -webkit-line-clamp: 2;
   }
 
-  /* 安全区域适配 */
+  /* 安全区域适配 - 修改点：增加底部间距，使内容更远离屏幕边缘 */
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 20px);
+    padding-bottom: max(env(safe-area-inset-bottom, 20px), 30px);
   }
 
   /* 滚动条隐藏 */
